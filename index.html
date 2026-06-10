@@ -1,92 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Viper AI - Code Upgrader</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <title>Viper AI</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-  <div class="container">
-    <h1>🟣 Viper AI</h1>
-    <p>Paste your code and get an upgraded version</p>
+  <div class="app">
 
-    <!-- INPUT -->
-    <textarea id="code" placeholder="Paste HTML / CSS / JS here..."></textarea>
+    <!-- HEADER -->
+    <div class="header">
+      <h1>🟣 Viper AI</h1>
+      <p>Code Upgrader Engine</p>
+    </div>
 
-    <!-- ACTION BUTTON -->
-    <button onclick="upgradeCode()">Upgrade Code</button>
+    <!-- MAIN GRID -->
+    <div class="grid">
 
-    <!-- STATUS -->
-    <p id="status"></p>
+      <!-- INPUT PANEL -->
+      <div class="panel">
+        <h3>Input Code</h3>
+        <textarea id="code" placeholder="Paste HTML / CSS / JS here..."></textarea>
 
-    <!-- OUTPUT -->
-    <h3>Output</h3>
-    <pre id="output"></pre>
+        <button onclick="upgrade()">⚡ Upgrade Code</button>
+        <p id="status"></p>
+      </div>
 
-    <!-- COPY -->
-    <button onclick="copyOutput()">Copy Output</button>
+      <!-- OUTPUT PANEL -->
+      <div class="panel">
+        <h3>Viper Output</h3>
+        <pre id="output"></pre>
+
+        <button onclick="copyCode()">📋 Copy</button>
+      </div>
+
+    </div>
+
   </div>
 
-  <script>
-    async function upgradeCode() {
-      const code = document.getElementById("code").value;
-      const status = document.getElementById("status");
-      const output = document.getElementById("output");
+<script>
+async function upgrade() {
+  const code = document.getElementById("code").value;
+  const status = document.getElementById("status");
+  const output = document.getElementById("output");
 
-      if (!code.trim()) {
-        status.textContent = "❌ Please paste some code first";
-        return;
-      }
+  status.textContent = "Upgrading...";
+  output.textContent = "";
 
-      status.textContent = "⏳ Upgrading...";
-      output.textContent = "";
+  const res = await fetch("/api/upgrade", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code })
+  });
 
-      try {
-        const res = await fetch("/api/upgrade", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ code })
-        });
+  const data = await res.json();
 
-        // IMPORTANT: read raw text first (prevents JSON crash)
-        const text = await res.text();
+  if (data.error) {
+    status.textContent = "Error: " + data.error;
+    return;
+  }
 
-        let data;
-        try {
-          data = JSON.parse(text);
-        } catch (e) {
-          status.textContent = "❌ Invalid server response";
-          output.textContent = text;
-          return;
-        }
+  output.textContent = data.upgraded;
+  status.textContent = "Done ✔";
+}
 
-        if (data.error) {
-          status.textContent = "❌ Error: " + data.error;
-          return;
-        }
-
-        output.textContent = data.upgraded;
-        status.textContent = "✅ Upgrade complete";
-
-      } catch (err) {
-        console.error(err);
-        status.textContent = "❌ Server not responding";
-      }
-    }
-
-    function copyOutput() {
-      const text = document.getElementById("output").textContent;
-
-      if (!text) return;
-
-      navigator.clipboard.writeText(text);
-      alert("Copied Viper output!");
-    }
-  </script>
+function copyCode() {
+  navigator.clipboard.writeText(
+    document.getElementById("output").textContent
+  );
+  alert("Copied!");
+}
+</script>
 
 </body>
 </html>
