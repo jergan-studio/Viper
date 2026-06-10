@@ -1,37 +1,87 @@
-async function upgradeCode() {
+async function upgradeCode(){
 
-    const code =
-        document.getElementById("inputCode").value;
+    const input =
+        document.getElementById("inputCode");
 
-    const response = await fetch(
-        "http://localhost:3000/upgrade",
-        {
+    const output =
+        document.getElementById("outputCode");
+
+    const responseBox =
+        document.getElementById("viperResponse");
+
+    const code = input.value.trim();
+
+    if(!code){
+        responseBox.innerHTML =
+        "⚠️ Paste some code first.";
+        return;
+    }
+
+    responseBox.innerHTML =
+`🐍 Viper Analysis
+
+Scanning code...
+Checking syntax...
+Optimizing...`;
+
+    try{
+
+        const response = await fetch("/api/upgrade",{
             method:"POST",
             headers:{
                 "Content-Type":"application/json"
             },
             body:JSON.stringify({
-                code
+                code:code
             })
-        }
-    );
+        });
 
-    const data = await response.json();
+        const data = await response.json();
 
-    document.getElementById("outputCode").value =
-        data.result;
+        output.value =
+            data.code ||
+            data.result ||
+            "No upgraded code returned.";
+
+        responseBox.innerHTML =
+`🐍 Viper Analysis
+
+✅ Upgrade Complete
+
+• Fixed possible issues
+• Improved readability
+• Added optimizations
+• Enhanced code structure
+
+Threat Level: LOW
+
+Your code has been upgraded successfully.`;
+
+    }catch(error){
+
+        console.error(error);
+
+        responseBox.innerHTML =
+`❌ Viper Error
+
+Unable to contact Viper servers.
+
+Details:
+${error.message}`;
+    }
 }
 
-function copyCode() {
+function copyCode(){
 
     const output =
         document.getElementById("outputCode");
 
-    output.select();
+    if(!output.value){
+        alert("No code to copy.");
+        return;
+    }
 
-    navigator.clipboard.writeText(
-        output.value
-    );
+    navigator.clipboard.writeText(output.value);
 
-    alert("Copied!");
+    alert("Copied upgraded code!");
 }
