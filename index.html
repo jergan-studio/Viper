@@ -1,56 +1,82 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Viper AI</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <title>Viper AI - Code Upgrader</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
 
   <div class="container">
-    <h1>Viper AI - Code Upgrader</h1>
+    <h1>🟣 Viper AI</h1>
+    <p>Paste code → get upgraded version</p>
 
-    <select id="lang">
-      <option value="auto">Auto</option>
-      <option value="html">HTML</option>
-      <option value="css">CSS</option>
-      <option value="javascript">JavaScript</option>
-    </select>
+    <!-- INPUT -->
+    <textarea id="code" placeholder="Paste HTML / CSS / JS here..."></textarea>
 
-    <textarea id="code" placeholder="Paste your code here..."></textarea>
-
+    <!-- BUTTON -->
     <button onclick="upgrade()">Upgrade Code</button>
 
-    <h3>Viper Output</h3>
+    <!-- STATUS -->
+    <p id="status"></p>
+
+    <!-- OUTPUT -->
+    <h3>Upgraded Code</h3>
     <pre id="output"></pre>
 
+    <!-- COPY BUTTON -->
     <button onclick="copyCode()">Copy Output</button>
   </div>
 
-<script>
-async function upgrade() {
-  const code = document.getElementById("code").value;
-  const language = document.getElementById("lang").value;
-  const output = document.getElementById("output");
+  <script>
+    async function upgrade() {
+      const code = document.getElementById("code").value;
+      const output = document.getElementById("output");
+      const status = document.getElementById("status");
 
-  output.textContent = "Upgrading...";
+      if (!code.trim()) {
+        status.textContent = "❌ Please paste some code first";
+        return;
+      }
 
-  const res = await fetch("/api/upgrade", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ code, language })
-  });
+      status.textContent = "⏳ Upgrading...";
+      output.textContent = "";
 
-  const data = await res.json();
+      try {
+        const res = await fetch("/api/upgrade", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ code })
+        });
 
-  output.textContent = data.upgraded || data.error;
-}
+        const data = await res.json();
 
-function copyCode() {
-  const text = document.getElementById("output").textContent;
-  navigator.clipboard.writeText(text);
-  alert("Copied Viper output!");
-}
-</script>
+        if (data.error) {
+          status.textContent = "❌ Error: " + data.error;
+          return;
+        }
+
+        output.textContent = data.upgraded;
+        status.textContent = "✅ Upgrade complete";
+
+      } catch (err) {
+        status.textContent = "❌ Server not responding";
+        console.error(err);
+      }
+    }
+
+    function copyCode() {
+      const output = document.getElementById("output").textContent;
+
+      if (!output) return;
+
+      navigator.clipboard.writeText(output);
+      alert("Copied Viper output!");
+    }
+  </script>
 
 </body>
 </html>
