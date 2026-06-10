@@ -4,62 +4,70 @@ const groq = new Groq({
   apiKey: process.env.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,
 });
 
-/**
- * Viper AI Code Upgrader API
- * Works on Vercel serverless functions
- */
-
 module.exports = async (req, res) => {
-  // Only allow POST requests
   if (req.method !== "POST") {
-    return res.status(405).json({
-      success: false,
-      error: "Method not allowed. Use POST.",
-    });
+    return res.status(405).json({ error: "POST only" });
   }
 
   try {
-    const { code } = req.body || {};
+    const { code } = req.body;
 
-    if (!code || code.trim() === "") {
-      return res.status(400).json({
-        success: false,
-        error: "No code provided",
-      });
+    if (!code) {
+      return res.status(400).json({ error: "No code provided" });
     }
 
-    // Groq AI request
     const completion = await groq.chat.completions.create({
       model: "llama3-70b-8192",
       messages: [
         {
           role: "system",
-          content:
-            "You are Viper AI, a professional code upgrader. You improve code quality, fix bugs, optimize structure, and return ONLY clean code without explanations.",
+          content: `
+You are Viper AI.
+
+Split the improved code into 3 parts:
+- HTML
+- CSS
+- JS
+
+Return ONLY valid JSON like this:
+{
+  "html": "...",
+  "css": "...",
+  "js": "..."
+}
+
+If a section is not needed, return empty string.
+          `,
         },
         {
           role: "user",
-          content: `Upgrade this code:\n\n${code}`,
+          content: code,
         },
       ],
       temperature: 0.2,
     });
 
-    const upgraded =
-      completion.choices?.[0]?.message?.content || "";
+    const text = completion.choices[0].message.content;
 
-    return res.status(200).json({
+    let parsed;
+
+    try {
+      parsed = JSON.parse(text);
+    } catch (e) {
+      return res.json({
+        error: "AI did not return valid JSON",
+        raw: text,
+      });
+    }
+
+    return res.json({
       success: true,
-      upgraded,
+      ...parsed,
     });
 
   } catch (err) {
-    console.error("Viper API Error:", err);
-
     return res.status(500).json({
-      success: false,
-      error: "AI upgrade failed",
-      details: err.message,
+      error: err.message,
     });
   }
 };
