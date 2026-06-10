@@ -1,53 +1,59 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Viper AI</title>
+  <title>Viper AI Tabs</title>
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-  <div class="app">
+<div class="app">
 
-    <!-- HEADER -->
-    <div class="header">
-      <h1>🟣 Viper AI</h1>
-      <p>Code Upgrader Engine</p>
+  <h1>🟣 Viper AI</h1>
+
+  <div class="layout">
+
+    <!-- INPUT -->
+    <div>
+      <textarea id="code" placeholder="Paste full project code..."></textarea>
+      <button onclick="upgrade()">Upgrade</button>
+      <p id="status"></p>
     </div>
 
-    <!-- MAIN GRID -->
-    <div class="grid">
+    <!-- OUTPUT TABS -->
+    <div>
 
-      <!-- INPUT PANEL -->
-      <div class="panel">
-        <h3>Input Code</h3>
-        <textarea id="code" placeholder="Paste HTML / CSS / JS here..."></textarea>
-
-        <button onclick="upgrade()">⚡ Upgrade Code</button>
-        <p id="status"></p>
+      <div class="tabs">
+        <button onclick="showTab('html')">HTML</button>
+        <button onclick="showTab('css')">CSS</button>
+        <button onclick="showTab('js')">JS</button>
       </div>
 
-      <!-- OUTPUT PANEL -->
-      <div class="panel">
-        <h3>Viper Output</h3>
-        <pre id="output"></pre>
+      <pre id="output"></pre>
 
-        <button onclick="copyCode()">📋 Copy</button>
-      </div>
-
+      <button onclick="copyTab()">Copy Current Tab</button>
     </div>
 
   </div>
 
+</div>
+
 <script>
+
+let currentTab = "html";
+let resultData = {};
+
+function showTab(tab) {
+  currentTab = tab;
+  document.getElementById("output").textContent =
+    resultData[tab] || "";
+}
+
 async function upgrade() {
   const code = document.getElementById("code").value;
   const status = document.getElementById("status");
-  const output = document.getElementById("output");
 
   status.textContent = "Upgrading...";
-  output.textContent = "";
 
   const res = await fetch("/api/upgrade", {
     method: "POST",
@@ -58,20 +64,26 @@ async function upgrade() {
   const data = await res.json();
 
   if (data.error) {
-    status.textContent = "Error: " + data.error;
+    status.textContent = data.error;
     return;
   }
 
-  output.textContent = data.upgraded;
+  resultData = {
+    html: data.html || "",
+    css: data.css || "",
+    js: data.js || ""
+  };
+
   status.textContent = "Done ✔";
+
+  showTab(currentTab);
 }
 
-function copyCode() {
-  navigator.clipboard.writeText(
-    document.getElementById("output").textContent
-  );
-  alert("Copied!");
+function copyTab() {
+  navigator.clipboard.writeText(resultData[currentTab] || "");
+  alert(currentTab.toUpperCase() + " copied!");
 }
+
 </script>
 
 </body>
