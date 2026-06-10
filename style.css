@@ -1,0 +1,29 @@
+body{
+    background:#0f172a;
+    color:white;
+    font-family:Arial;
+}
+
+.container{
+    width:90%;
+    max-width:1000px;
+    margin:auto;
+    padding:20px;
+}
+
+textarea{
+    width:100%;
+    height:250px;
+    background:#111827;
+    color:#00ff88;
+    border:1px solid #333;
+    margin:10px 0;
+    padding:10px;
+}
+
+button{
+    background:#00ff88;
+    border:none;
+    padding:10px 20px;
+    cursor:pointer;
+}
