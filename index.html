@@ -1,145 +1,56 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Viper AI</title>
-
-<link rel="stylesheet" href="style.css">
-
-<style>
-body{
-    margin:0;
-    background:#0f172a;
-    color:white;
-    font-family:Arial,sans-serif;
-}
-
-.container{
-    max-width:1100px;
-    margin:auto;
-    padding:20px;
-}
-
-.header{
-    text-align:center;
-    margin-bottom:20px;
-}
-
-.header h1{
-    color:#00ff88;
-    text-shadow:0 0 20px #00ff88;
-    font-size:48px;
-}
-
-.header p{
-    color:#9ca3af;
-}
-
-.card{
-    background:#111827;
-    border:1px solid #374151;
-    border-radius:20px;
-    padding:20px;
-    margin-bottom:20px;
-}
-
-textarea{
-    width:100%;
-    min-height:250px;
-    background:#0b1220;
-    color:#00ff88;
-    border:1px solid #374151;
-    border-radius:16px;
-    padding:15px;
-    box-sizing:border-box;
-    resize:vertical;
-    font-family:Consolas,monospace;
-}
-
-button{
-    background:#00ff88;
-    color:black;
-    border:none;
-    border-radius:12px;
-    padding:12px 20px;
-    font-weight:bold;
-    cursor:pointer;
-    margin-top:10px;
-}
-
-button:hover{
-    transform:translateY(-2px);
-}
-
-#viperResponse{
-    white-space:pre-wrap;
-    line-height:1.6;
-}
-
-.status{
-    color:#00ff88;
-    font-weight:bold;
-}
-
-.footer{
-    text-align:center;
-    color:#6b7280;
-    margin-top:20px;
-}
-</style>
+  <title>Viper AI</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="container">
+  <div class="container">
+    <h1>Viper AI - Code Upgrader</h1>
 
-    <div class="header">
-        <h1>🐍 Viper AI</h1>
-        <p>Upgrade. Optimize. Dominate.</p>
-    </div>
+    <select id="lang">
+      <option value="auto">Auto</option>
+      <option value="html">HTML</option>
+      <option value="css">CSS</option>
+      <option value="javascript">JavaScript</option>
+    </select>
 
-    <div class="card">
-        <h2>Paste Code</h2>
+    <textarea id="code" placeholder="Paste your code here..."></textarea>
 
-        <textarea
-            id="inputCode"
-            placeholder="Paste your code here..."
-        ></textarea>
+    <button onclick="upgrade()">Upgrade Code</button>
 
-        <button onclick="upgradeCode()">
-            Upgrade Code
-        </button>
-    </div>
+    <h3>Viper Output</h3>
+    <pre id="output"></pre>
 
-    <div class="card">
-        <h2>🐍 Viper Analysis</h2>
+    <button onclick="copyCode()">Copy Output</button>
+  </div>
 
-        <div id="viperResponse">
-Ready to analyze code...
-        </div>
-    </div>
+<script>
+async function upgrade() {
+  const code = document.getElementById("code").value;
+  const language = document.getElementById("lang").value;
+  const output = document.getElementById("output");
 
-    <div class="card">
-        <h2>Upgraded Code</h2>
+  output.textContent = "Upgrading...";
 
-        <textarea
-            id="outputCode"
-            placeholder="Upgraded code will appear here..."
-        ></textarea>
+  const res = await fetch("/api/upgrade", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code, language })
+  });
 
-        <button onclick="copyCode()">
-            Copy Code
-        </button>
-    </div>
+  const data = await res.json();
 
-    <div class="footer">
-        Viper AI © 2026
-    </div>
+  output.textContent = data.upgraded || data.error;
+}
 
-</div>
-
-<script src="app.js"></script>
+function copyCode() {
+  const text = document.getElementById("output").textContent;
+  navigator.clipboard.writeText(text);
+  alert("Copied Viper output!");
+}
+</script>
 
 </body>
 </html>
