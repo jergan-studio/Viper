@@ -1,94 +1,72 @@
 const express = require("express");
 const cors = require("cors");
-const morgan = require("morgan");
+const Groq = require("groq-sdk");
 
 const app = express();
 
-/* =========================
-   MIDDLEWARE
-========================= */
 app.use(cors());
 app.use(express.json());
-app.use(morgan("dev"));
+app.use(express.static(__dirname));
+
+const groq = new Groq({
+  apiKey: process.env.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,
+});
 
 /* =========================
-   ROUTES
+   VIPER CODE UPGRADE ENGINE
 ========================= */
-
-// Upgrade system
-const upgradeRoute = require("./api/upgrade");
-app.use("/api/upgrade", upgradeRoute);
-
-/* =========================
-   AI CORE (PLACEHOLDER)
-   Day 3+ we connect Groq / OpenAI here
-========================= */
-
-app.post("/api/chat", async (req, res) => {
+app.post("/api/upgrade", async (req, res) => {
   try {
-    const { message, userId, model } = req.body;
+    const { code, language } = req.body;
 
-    if (!message) {
+    if (!code) {
       return res.status(400).json({
         success: false,
-        error: "Message is required",
+        error: "No code provided",
       });
     }
 
-    // TEMP AI RESPONSE (replace with Groq/OpenAI later)
-    const response = {
-      success: true,
-      reply: `Viper AI received: "${message}"`,
-      model: model || "viper-basic",
-      timestamp: Date.now(),
-    };
+    const prompt = `
+You are Viper AI, a code upgrade engine.
 
-    return res.json(response);
+Your job:
+- Improve code quality
+- Fix bugs
+- Optimize structure
+- Keep same functionality
+- Return ONLY upgraded code (no explanations)
+
+Language: ${language || "auto-detect"}
+
+CODE:
+${code}
+`;
+
+    const completion = await groq.chat.completions.create({
+      model: "llama3-70b-8192",
+      messages: [
+        { role: "user", content: prompt }
+      ],
+    });
+
+    return res.json({
+      success: true,
+      upgraded: completion.choices[0].message.content,
+    });
+
   } catch (err) {
-    console.error("Chat error:", err);
+    console.error(err);
+
     return res.status(500).json({
       success: false,
-      error: "Internal server error",
+      error: "Viper upgrade failed",
+      details: err.message,
     });
   }
 });
 
-/* =========================
-   HEALTH CHECK
-========================= */
-
-app.get("/", (req, res) => {
-  res.json({
-    name: "Viper AI",
-    status: "running",
-    version: "1.0.0",
-    endpoints: [
-      "/api/chat",
-      "/api/upgrade/check",
-      "/api/upgrade/list",
-      "/api/upgrade/latest",
-    ],
-  });
-});
-
-/* =========================
-   404 HANDLER
-========================= */
-
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    error: "Route not found",
-  });
-});
-
-/* =========================
-   START SERVER
-========================= */
-
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`🟣 Viper AI running on port ${PORT}`);
-  console.log(`http://localhost:${PORT}`);
+  console.log(`Viper AI running on http://localhost:${PORT}`);
 });
